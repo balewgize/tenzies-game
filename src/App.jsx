@@ -105,7 +105,8 @@ export default function App() {
   return (
     <main>
       {tenzies && <Confetti width={window.innerWidth} height={window.innerHeight} />}
-
+      {tenzies && <h1 className="title">You win!</h1>}
+      
       {
         rollCount
           ?
