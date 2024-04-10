@@ -8,8 +8,16 @@ export default function App() {
   const [dice, setDice] = useState(allNewDice())
   const [tenzies, setTenzies] = useState(false)
   const [rollCount, setRollCount] = useState(0)
-  const [startTime, setStartTime] = useState(null);
-  const [currentTime, setCurrentTime] = useState(null);
+  const [startTime, setStartTime] = useState(null)
+  const [currentTime, setCurrentTime] = useState(null)
+
+  const [bestTime, setBestTime] = useState(
+    () => JSON.parse(localStorage.getItem("bestTime")) || null
+  )
+  const [bestRoll, setBestRoll] = useState(
+    () => JSON.parse(localStorage.getItem("bestRoll")) || null
+  )
+
 
   useEffect(() => {
     const allHeld = dice.every(die => die.isHeld)
@@ -22,20 +30,39 @@ export default function App() {
 
 
   useEffect(() => {
-    let interval = null;
+    let interval = null
 
     if (!tenzies && rollCount > 0) {
       if (rollCount === 1) {
-        setStartTime(Date.now());
+        setStartTime(Date.now())
       }
 
       interval = setInterval(() => {
-        setCurrentTime(Date.now());
+        setCurrentTime(Date.now())
       }, 1000);
     }
 
-    return () => clearInterval(interval);
-  }, [tenzies, rollCount]);
+    return () => clearInterval(interval)
+  }, [tenzies, rollCount])
+
+  useEffect(() => {
+    if (tenzies) {
+      const timeElapsed = currentTime - startTime
+      if (!bestTime || timeElapsed < bestTime) {
+        setBestTime(timeElapsed)
+        localStorage.setItem("bestTime", JSON.stringify(timeElapsed))
+      }
+
+      if (!bestRoll || rollCount < bestRoll) {
+        setBestRoll(rollCount)
+        localStorage.setItem("bestRoll", JSON.stringify(rollCount))
+      }
+
+      console.log(bestTime, bestRoll)
+    }
+  }, [tenzies, rollCount, startTime, currentTime, bestTime, bestRoll])
+
+
 
 
   function generateNewDice() {
@@ -78,18 +105,18 @@ export default function App() {
   }
 
   function formatTime(time) {
-    if (!time) {
-      return "00:00";
+    console.log(time)
+    if (!time || time < 0) {
+      return "00:00"
     }
 
-    const difference = time - startTime;
-    let seconds = Math.floor((difference / 1000) % 60);
-    let minutes = Math.floor((difference / (1000 * 60)) % 60);
+    let seconds = Math.floor((time / 1000) % 60)
+    let minutes = Math.floor((time / (1000 * 60)) % 60)
 
-    seconds = seconds < 10 ? `0${seconds}` : seconds;
-    minutes = minutes < 10 ? `0${minutes}` : minutes;
+    seconds = seconds < 10 ? `0${seconds}` : seconds
+    minutes = minutes < 10 ? `0${minutes}` : minutes
 
-    return `${minutes}:${seconds}`;
+    return `${minutes}:${seconds}`
   }
 
 
@@ -106,14 +133,20 @@ export default function App() {
     <main>
       {tenzies && <Confetti width={window.innerWidth} height={window.innerHeight} />}
       {tenzies && <h1 className="title">You win!</h1>}
-      
+
       {
         rollCount
           ?
           <>
             <div className="roll-count">
-              <p>Time: {formatTime(currentTime)}</p>
-              <p>Roll: {rollCount}</p>
+              <p>
+                Time: {formatTime(currentTime - startTime)} <br />
+                {tenzies && bestTime && `Best Time: ${formatTime(bestTime)}`}
+              </p>
+              <p>
+                Roll: {rollCount} <br />
+                {tenzies && bestRoll && `Best Roll: ${bestRoll}`}
+              </p>
             </div>
           </>
           :
